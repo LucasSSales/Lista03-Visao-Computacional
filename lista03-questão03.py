@@ -2,14 +2,30 @@ import numpy as np
 import cv2
 
 def show_vectors(vec, string):
+    print(len(vec))
+    s = ""
     print("VETOR DE "+string)
     for v in vec:
-        print("[", end="")
+        s += "[ "
+        #print("[", end="")
         for i in v:
-            print(i, end="")
-            print(" ", end="")
-        print("]")
-    print("")
+            s += str(i) + " "
+            #print(i, end="")
+            #print(" ", end="")
+        s += "]\n"
+        #print("]")
+    s += "\n"
+    #print(s)
+    return s
+
+
+def stringando(vec):
+    s = "[ "
+    for v in vec[-1]:
+        s += str(v) + " "
+    s += "]"
+    return s
+
 
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -18,6 +34,7 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 cap = cv2.VideoCapture(0)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter('output.avi', fourcc, 4.0, (640, 480))
+out2 = cv2.VideoWriter('output2.avi', fourcc, 4.0, (640, 480))
 
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((6*7,3), np.float32)
@@ -30,7 +47,7 @@ imgpoints = [] # 2d points in image plane.
 
 #640.0 w
 #480.0 h
-
+i = 0
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -48,6 +65,7 @@ while(True):
     #print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     #print(cap.get(cv2.CAP_PROP_FPS))
 
+    rs, ts = "", ""
     if ret == True:
         objpoints.append(objp)
 
@@ -60,15 +78,25 @@ while(True):
 
 
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
-        show_vectors(rvecs, "ROTAÇÃO")
-        show_vectors(tvecs, "TRANSLAÇÃO")
+        #vec = show_vectors(rvecs, "ROTAÇÃO")
+        #show_vectors(tvecs, "TRANSLAÇÃO")
+        rs, ts = stringando(rvecs), stringando(tvecs)
     
     # Display the resulting frame
-    cv2.imshow('frame',frame)
     out.write(frame)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(frame, "ROTATION: "+rs, (10,450), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+    cv2.putText(frame, "TRANSLATION: "+ts, (10,470), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+    cv2.imshow('frame',frame)
+    out2.write(frame)
+    i += 1
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
 out.release()
+out2.release()
 cv2.destroyAllWindows()
+
+
+#https://docs.opencv.org/3.1.0/d6/d6e/group__imgproc__draw.html#ga5126f47f883d730f633d74f07456c576
